@@ -1,0 +1,24 @@
+{
+  "name": "burial-qr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node server.js",
+    "seed": "node seed-and-make-qr.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+ "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mongodb": "^6.18.0",
+    "qrcode": "^1.5.4"
+  }
+}

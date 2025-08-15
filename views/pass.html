@@ -1,0 +1,322 @@
+<!-- <!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Event Check-in</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto;
+            padding: 24px;
+        }
+
+        .card {
+            max-width: 500px;
+            margin: 0 auto;
+            border: 1px solid #eee;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .06);
+        }
+
+        .ok {
+            color: #0d9488;
+        }
+
+        .bad {
+            color: #dc2626;
+        }
+
+        .muted {
+            color: #6b7280;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .event {
+            margin-top: 12px;
+        }
+
+        img.flyer {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card" id="card">
+        <div class="title">Checking your pass…</div>
+        <div class="muted" id="status">Please wait</div>
+    </div>
+    <script>
+        const FLYER_URL = "https://res.cloudinary.com/dmc7jxfym/image/upload/v1755213892/Save_the_date_mpbtxr.jpg";
+
+        (async function () {
+            const params = new URLSearchParams(location.search);
+            const token = params.get("token");
+            const card = document.getElementById("card");
+
+            if (!token) { card.innerHTML = `<div class="title bad">No token found ❌</div>`; return; }
+
+            try {
+                // 1) Peek (read-only)
+                const peek = await fetch(`/api/peek?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+                const info = await peek.json();
+
+                console.log("PEEK result:", info);
+                document.getElementById("status").textContent = `State: ${info.code} • Token: ${token}`;
+
+
+                if (!info.ok && info.code === "NOT_FOUND") {
+                    card.innerHTML = `<div class="title bad">Invalid pass ❌</div><div class="muted">Please contact an usher.</div>`;
+                    return;
+                }
+
+                if (info.ok && info.code === "READY") {
+                    card.innerHTML = `
+      <div class="title">Guest: <strong>${info.name || "Guest"}</strong></div>
+      <div class="muted">Tap the button below to confirm check-in.</div>
+      <div class="event" style="margin-top:12px">
+        <div><strong>Event:</strong> Celebration of Life for Elder Peter Akinola Ademokoya</div>
+        <div><strong>Date:</strong> 31st October, 2025, 10:00 AM</div>
+        <div><strong>Venue:</strong> Mauve 21</div>
+      </div>
+      <img class="flyer" src="${FLYER_URL}" alt="Event Flyer" loading="lazy" onerror="this.style.display='none'">
+      <button id="confirmBtn" style="margin-top:16px;padding:12px 16px;border:0;border-radius:10px;background:#0d9488;color:#fff;font-weight:600;width:100%">Confirm check‑in</button>
+    `;
+
+                    let handled = false;         // <- prevents late/second responses from overwriting success
+                    let inFlight = false;
+
+                    const btn = document.getElementById("confirmBtn");
+                    btn.onclick = async (e) => {
+                        if (inFlight) return;      // ignore double taps
+                        inFlight = true;
+                        btn.disabled = true;
+                        btn.style.opacity = "0.7";
+                        btn.textContent = "Checking in…";
+
+                        try {
+                            const r = await fetch(`/api/check-in?token=${encodeURIComponent(token)}`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                cache: "no-store",
+                                body: "{}"
+                            });
+                            const data = await r.json();
+
+                            if (data.ok && data.code === "CHECKED_IN") {
+                                handled = true;
+                                card.innerHTML = `
+            <div class="title ok">Welcome, ${data.name || "Guest"} ✅</div>
+            <div>You're successfully checked in.</div>
+            <img class="flyer" src="${FLYER_URL}" alt="Event Flyer" loading="lazy" onerror="this.style.display='none'">
+            <p class="muted" style="margin-top:12px">This pass is now marked as used.</p>
+          `;
+                                return;
+                            }
+
+                            if (!handled && data.code === "ALREADY_USED") {
+                                // Only show this if we didn't already render success
+                                card.innerHTML = `<div class="title bad">Pass already used ❌</div>${data.name ? `Name: <strong>${data.name}</strong><br/>` : ""
+                                    }`;
+                                return;
+                            }
+
+                            if (!handled) {
+                                card.innerHTML = `<div class="title bad">Error ❌</div><div class="muted">Please try again.</div>`;
+                            }
+                        } catch (e) {
+                            if (!handled) {
+                                card.innerHTML = `<div class="title bad">Network error ❌</div>`;
+                            }
+                        }
+                    };
+                    return;
+                }
+
+                if (info.code === "ALREADY_USED") {
+                    card.innerHTML = `<div class="title bad">Pass already used ❌</div>${info.name ? `Name: <strong>${info.name}</strong>` : ""}<br>
+          <img class="flyer" src="${FLYER_URL}" alt="Event Flyer" loading="lazy" onerror="this.style.display='none'">`;
+                    return;
+                }
+
+                card.innerHTML = `<div class="title bad">Unknown state ❌</div>`;
+            } catch (e) {
+                console.error(e);
+                card.innerHTML = `<div class="title bad">Network error ❌</div>`;
+            }
+        })();
+    </script>
+
+
+</body>
+
+</html> -->
+
+
+
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Event Check-in</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto; padding: 24px; }
+    .card { max-width: 500px; margin: 0 auto; border: 1px solid #eee; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+    .ok { color: #0d9488; }
+    .bad { color: #dc2626; }
+    .muted { color: #6b7280; }
+    .title { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
+    .event { margin-top: 12px; }
+    img.flyer { width: 100%; border-radius: 12px; margin-top: 12px; }
+    button.primary { margin-top:16px; padding:12px 16px; border:0; border-radius:10px; background:#0d9488; color:#fff; font-weight:600; width:100%; cursor:pointer; }
+    button.primary[disabled] { opacity:.7; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="title">Checking your pass…</div>
+    <div class="muted" id="status" aria-live="polite">Please wait</div>
+  </div>
+
+  <script>
+    const FLYER_URL = "https://res.cloudinary.com/dmc7jxfym/image/upload/v1755213892/Save_the_date_mpbtxr.jpg";
+    const IDEMPOTENCY_WINDOW_MS = 15000; // treat *very recent* ALREADY_USED as success
+
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    const card = document.getElementById("card");
+    const statusEl = document.getElementById("status");
+
+    function fmt(dt) {
+      try { return new Date(dt).toLocaleString(); } catch { return String(dt); }
+    }
+
+    function renderSuccess(name, checkedInAt, subtitle = "You're successfully checked in.") {
+      card.innerHTML = `
+        <div class="title ok">Welcome, ${name || "Guest"} ✅</div>
+        <div>${subtitle}</div>
+        ${checkedInAt ? `<div class="muted" style="margin-top:6px">Checked in at: ${fmt(checkedInAt)}</div>` : ""}
+        <img class="flyer" src="${FLYER_URL}" alt="Event Flyer" loading="lazy" onerror="this.style.display='none'">
+        <p class="muted" style="margin-top:12px">This pass is now marked as used.</p>
+      `;
+    }
+
+    function renderAlreadyUsed(name, checkedInAt) {
+      card.innerHTML = `
+        <div class="title ok">Welcome back, ${name || "Guest"} ✅</div>
+        <div class="muted">This pass was already checked in.</div>
+        ${checkedInAt ? `<div class="muted" style="margin-top:6px">Last check-in: ${fmt(checkedInAt)}</div>` : ""}
+        <img class="flyer" src="${FLYER_URL}" alt="Event Flyer" loading="lazy" onerror="this.style.display='none'">
+      `;
+    }
+
+    async function doCheckIn(btn) {
+      let inFlight = false;
+      const handler = async () => {
+        if (inFlight) return;
+        inFlight = true;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Checking in…";
+        }
+        try {
+          const r = await fetch(`/api/check-in?token=${encodeURIComponent(token)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: "{}"
+          });
+          const data = await r.json();
+
+          // Success
+          if (data.ok && data.code === "CHECKED_IN") {
+            renderSuccess(data.name, data.checkedInAt);
+            return;
+          }
+
+          // Idempotent success window for near-simultaneous double posts
+          if (data.code === "ALREADY_USED" && data.checkedInAt) {
+            const delta = Math.abs(Date.now() - new Date(data.checkedInAt).getTime());
+            if (delta < IDEMPOTENCY_WINDOW_MS) {
+              renderSuccess(data.name, data.checkedInAt);
+              return;
+            }
+            // Outside window → friendly "already used"
+            renderAlreadyUsed(data.name, data.checkedInAt);
+            return;
+          }
+
+          // Other errors
+          card.innerHTML = `<div class="title bad">Error ❌</div><div class="muted">Please try again.</div>`;
+        } catch (e) {
+          card.innerHTML = `<div class="title bad">Network error ❌</div><div class="muted">Check connection and retry.</div>`;
+        }
+      };
+      // Ensure only one actual submission
+      if (btn) btn.addEventListener("click", handler, { once: true });
+      return handler;
+    }
+
+    (async function main() {
+      if (!token) {
+        card.innerHTML = `<div class="title bad">No token found ❌</div>`;
+        return;
+      }
+
+      try {
+        const peek = await fetch(`/api/peek?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+        const info = await peek.json();
+
+        console.log("PEEK result:", info);
+        statusEl.textContent = `State: ${info.code || "?"} • Token: ${token}`;
+
+        if (!info.ok && info.code === "NOT_FOUND") {
+          card.innerHTML = `<div class="title bad">Invalid pass ❌</div><div class="muted">Please contact an usher.</div>`;
+          return;
+        }
+
+        // READY → show confirm button
+        if (info.ok && info.code === "READY") {
+          card.innerHTML = `
+            <div class="title">Guest: <strong>${info.name || "Guest"}</strong></div>
+            <div class="muted">Tap the button below to confirm check-in.</div>
+            <div class="event" style="margin-top:12px">
+              <div><strong>Event:</strong> Celebration of Life for Elder Peter Akinola Ademokoya</div>
+              <div><strong>Date:</strong> 31st October, 2025, 10:00 AM</div>
+              <div><strong>Venue:</strong> Mauve 21</div>
+            </div>
+            <img class="flyer" src="${FLYER_URL}" alt="Event Flyer" loading="lazy" onerror="this.style.display='none'">
+            <button id="confirmBtn" type="button" class="primary" aria-busy="false">Confirm check-in</button>
+          `;
+          const btn = document.getElementById("confirmBtn");
+          await doCheckIn(btn); // attach handler (once)
+          return;
+        }
+
+        // ALREADY_USED → friendly welcome back
+        if (info.ok && info.code === "ALREADY_USED") {
+          renderAlreadyUsed(info.name, info.checkedInAt);
+          return;
+        }
+
+        // Fallback
+        card.innerHTML = `<div class="title bad">Unknown state ❌</div><div class="muted">Please contact support.</div>`;
+      } catch (e) {
+        console.error(e);
+        card.innerHTML = `<div class="title bad">Network error ❌</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>
