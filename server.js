@@ -13,6 +13,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const allowed = [
+  "https://burial-qr-generator.onrender.com",
+  "http://localhost:3000"
+];
+app.use(cors({ origin: allowed }));
+
+
 app.use((_, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   next();
